@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            color: #E0E0E0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 12px;
+            box-sizing: border-box; background-color: #2b2b2b; gap: 12px; overflow: hidden;
+        }
+
+        #module-settings { flex: 0 0 auto; }
+        #toggle-key-btn {
+            background-color: transparent; color: #aaa; border: 1px solid #444; padding: 6px 12px;
+            border-radius: 4px; cursor: pointer; font-size: 12px; width: 100%; text-align: left;
+            display: flex; justify-content: space-between;
+        }
+        #toggle-key-btn:hover { background-color: #383838; color: #fff; }
+        #key-panel { display: none; background-color: #222; padding: 12px; border-radius: 4px; border: 1px solid #444; margin-top: 8px; }
+
+        .api-toggle-group { display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: #ccc; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        .api-toggle-group label { cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 0;}
+
+        .setting-row { margin-bottom: 8px; }
+        .setting-row label { font-size: 12px; color: #999; margin-bottom: 4px; }
+        input[type="text"], input[type="password"] {
+            width: 100%; background-color: #111; color: #fff; border: 1px solid #555;
+            padding: 6px; border-radius: 4px; box-sizing: border-box; font-size: 12px;
+        }
+        input:focus { outline: none; border-color: #1473E6; }
+
+        #save-key-btn { background-color: #28a745; margin-top: 8px; width: 100%; }
+        #save-key-btn:hover { background-color: #218838; }
+
+        #module-input { flex: 0 0 auto; background-color: #383838; padding: 12px; border-radius: 6px; border: 1px solid #444; }
+        #module-output {
+            flex: 1 1 auto; min-height: 100px; display: flex; flex-direction: column;
+            background-color: #383838; padding: 12px; border-radius: 6px; border: 1px solid #444;
+        }
+        #module-image-output {
+            display: none; flex: 0 0 280px; flex-direction: column;
+            background-color: #383838; padding: 12px; border-radius: 6px; border: 1px solid #444;
+        }
+
+        label { font-size: 13px; font-weight: bold; color: #aaa; margin-bottom: 6px; display: block; }
+        #output-area { flex: 1; overflow-y: auto; background-color: #222; padding: 12px; border-radius: 4px; border: 1px solid #111; font-size: 13px; line-height: 1.6; }
+        textarea { width: 100%; height: 60px; background-color: #222; color: white; border: 1px solid #111; border-radius: 4px; padding: 8px; resize: vertical; box-sizing: border-box; font-size: 13px; }
+        textarea:focus { outline: none; border-color: #1473E6; }
+        .checkbox-wrapper { margin-top: 10px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #ccc; }
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+        button { background-color: #1473E6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        button:hover { background-color: #0d66d0; }
+        #send-btn { flex-grow: 1; }
+        #clear-btn { background-color: #555; flex-grow: 0; width: 80px; }
+        #clear-btn:hover { background-color: #666; }
+
+        #image-preview-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; background-color: #222; padding: 12px; border-radius: 4px; border: 1px solid #111; position: relative; }
+        #image-placeholder { flex: 1; display: flex; justify-content: center; align-items: center; color: #777; font-size: 13px; }
+        #generated-image { max-width: 100%; max-height: 200px; border-radius: 4px; border: 2px solid #555; display: none; }
+        #image-meta-area { font-size: 12px; color: #aaa; margin-top: 6px; text-align: center; display: none; }
+        #output-area strong { color: #fff; }
+    </style>
+</head>
+<body>
+    <div id="module-settings">
+        <button id="toggle-key-btn">⚙️ 接口与模型配置 (点击展开) <span>▼</span></button>
+        <div id="key-panel">
+            <div class="api-toggle-group">
+                <label><input type="radio" name="api-type" value="official"> 官方直连 API</label>
+                <label><input type="radio" name="api-type" value="thirdparty" checked> 第三方代理 API</label>
+            </div>
+
+            <div id="official-settings" style="display: none;">
+                <div class="setting-row">
+                    <label>Google 官方 API Key (AI Studio)：</label>
+                    <input type="password" id="official-key-input" placeholder="输入 API Key...">
+                </div>
+            </div>
+
+            <div id="thirdparty-settings">
+                <div class="setting-row">
+                    <label>代理接口地址 (URL)：</label>
+                    <input type="text" id="tp-url-input" placeholder="如：https://api.openai.com">
+                </div>
+                <div class="setting-row">
+                    <label>模型名称 (Model)：</label>
+                    <input type="text" id="tp-model-input" placeholder="如：gemini-2.5-pro 或 gpt-4o">
+                </div>
+                <div class="setting-row">
+                    <label>代理 API Key：</label>
+                    <input type="password" id="tp-key-input" placeholder="输入代理商提供的 sk-xxxxxxxx...">
+                </div>
+            </div>
+
+            <button id="save-key-btn">💾 保存配置并隐藏</button>
+        </div>
+    </div>
+
+    <div id="module-input">
+        <label>1. 你的设计需求或问题</label>
+        <textarea id="prompt-input" placeholder="输入需求（例如：帮我给这段文案断句并推荐字体，或者：帮我看看当前画面的调色和构图怎么优化）..."></textarea>
+        <div class="checkbox-wrapper">
+            <input type="checkbox" id="include-canvas">
+            <label for="include-canvas">附带发送当前的 PS 画面进行诊断</label>
+        </div>
+        <div class="btn-group">
+            <button id="send-btn">发送给 AI</button>
+            <button id="clear-btn">清空</button>
+        </div>
+    </div>
+    <div id="module-output">
+        <label>2. AI 诊断与优化建议</label>
+        <div id="output-area">等待诊断...</div>
+    </div>
+    <div id="module-image-output">
+        <label>3. AI 生成结果</label>
+        <div id="image-preview-container">
+            <div id="image-placeholder">等待生成...</div>
+            <img id="generated-image" src="" alt="AI 生成结果">
+            <div id="image-meta-area">
+                <span id="image-dimensions">尺寸: 适配画布</span>
+                <button id="send-to-ps-btn" style="margin-left: 10px;">发送到 PS</button>
+            </div>
+        </div>
+    </div>
+    <script src="index.js"></script>
+</body>
+</html>
